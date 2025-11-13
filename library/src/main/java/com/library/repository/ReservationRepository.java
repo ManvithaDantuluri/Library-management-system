@@ -1,5 +1,8 @@
 package com.library.repository;
 
-public class ReservationRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.library.entity.Reservation;
+
+public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 }
