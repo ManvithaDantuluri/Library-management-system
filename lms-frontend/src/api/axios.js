@@ -1,3 +1,4 @@
+// src/api/axios.js
 import axios from "axios";
 
 const API = axios.create({
@@ -6,10 +7,30 @@ const API = axios.create({
 
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  if (token) {
+
+  // ✅ Don't attach token for public endpoints
+  if (
+    token &&
+    !config.url.includes("/auth/login") &&
+    !config.url.includes("/auth/register")
+  ) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
+
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear token and redirect to login when expired
+      alert("Session expired. Please log in again.");
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default API;

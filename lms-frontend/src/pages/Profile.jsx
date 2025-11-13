@@ -1,28 +1,66 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/profile.css";
+import axios from "axios";
 
 const Profile = () => {
-  const [user, setUser] = useState({
-    name: "Manvitha Dantuluri",
-    email: "manvitha@example.com",
-    role: "Student",
-    joinedDate: "2023-08-15",
-    totalBooksBorrowed: 12,
-    activeReservations: 2,
-  });
-
+  const [user, setUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editData, setEditData] = useState(user);
+  const [editData, setEditData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch logged-in user details from backend
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const token = localStorage.getItem("token"); // JWT token stored on login
+        if (!token) {
+          console.error("No token found. Please login again.");
+          setLoading(false);
+          return;
+        }
+
+        const response = await axios.get("http://localhost:8082/api/users/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setUser(response.data);
+        setEditData(response.data);
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditData({ ...editData, [name]: value });
   };
 
-  const handleSave = () => {
-    setUser(editData);
-    setIsModalOpen(false);
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put("http://localhost:8082/api/users/update", editData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(editData);
+      setIsModalOpen(false);
+      alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    }
   };
+
+  if (loading) return <p>Loading profile...</p>;
+  if (!user) return <p>No user data found. Please login again.</p>;
 
   return (
     <div className="page-container">
@@ -49,15 +87,17 @@ const Profile = () => {
           </div>
           <div className="detail-row">
             <span className="label">Joined Date:</span>
-            <span className="value">{user.joinedDate}</span>
+            <span className="value">
+              {new Date(user.joinedDate).toLocaleDateString()}
+            </span>
           </div>
           <div className="detail-row">
             <span className="label">Books Borrowed:</span>
-            <span className="value">{user.totalBooksBorrowed}</span>
+            <span className="value">{user.totalBooksBorrowed || 0}</span>
           </div>
           <div className="detail-row">
             <span className="label">Active Reservations:</span>
-            <span className="value">{user.activeReservations}</span>
+            <span className="value">{user.activeReservations || 0}</span>
           </div>
         </div>
 
@@ -90,7 +130,10 @@ const Profile = () => {
               />
             </div>
             <div className="modal-actions">
-              <button className="cancel-btn" onClick={() => setIsModalOpen(false)}>
+              <button
+                className="cancel-btn"
+                onClick={() => setIsModalOpen(false)}
+              >
                 Cancel
               </button>
               <button className="save-btn" onClick={handleSave}>
