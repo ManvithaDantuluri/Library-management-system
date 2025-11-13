@@ -1,0 +1,22 @@
+.page-container {
+  display: flex;
+}
+
+.page-content {
+  margin-left: var(--sidebar-width);
+  margin-top: 70px;
+  padding: 30px;
+  flex: 1;
+  background-color: var(--bg-color);
+  min-height: 100vh;
+}
+
+.page-content h1 {
+  font-size: 1.75rem;
+  color: var(--text-color);
+}
+
+.page-content p {
+  color: var(--muted-text-color);
+  margin-top: 10px;
+}
